@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stack Burgers 🍔</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+:root {
+  --bg-primary:    #0d0d0f;
+  --bg-secondary:  #141418;
+  --bg-card:       #1a1a22;
+  --accent:        #ff6b00;
+  --accent-red:    #e63946;
+  --accent-glow:   #ff6b0055;
+  --accent-green:  #2ecc71;
+  --text-primary:  #f0f0f0;
+  --text-muted:    #888899;
+  --text-dark:     #555566;
+  --border:        #2a2a38;
+  --border-accent: #ff6b0044;
+  --font-title:    'Orbitron', monospace;
+  --font-body:     'Exo 2', sans-serif;
+  --radius:        12px;
+  --radius-sm:     8px;
+  --shadow:        0 4px 24px rgba(0,0,0,0.5);
+  --shadow-accent: 0 0 20px rgba(255,107,0,0.3);
+  --transition:    all 0.25s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  background-image:
+    linear-gradient(rgba(255,107,0,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,107,0,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
+h1, h2, h3 { font-family: var(--font-title); font-weight: 700; }
+
+/* --- Botões --- */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border: none; border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-weight: 600; font-size: 0.95rem;
+  cursor: pointer; transition: var(--transition); letter-spacing: 0.5px;
+}
+.btn-primary { background: linear-gradient(135deg, var(--accent), #ff3d00); color: #fff; box-shadow: 0 4px 15px rgba(255,107,0,0.35); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,107,0,0.5); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-success { background: linear-gradient(135deg, #27ae60, #1e8449); color: #fff; box-shadow: 0 4px 15px rgba(39,174,96,0.3); }
+.btn-success:hover { transform: translateY(-2px); }
+.btn-success:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-danger { background: rgba(230,57,70,0.15); color: var(--accent-red); border: 1px solid rgba(230,57,70,0.3); }
+.btn-danger:hover { background: rgba(230,57,70,0.25); }
+.btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.btn-outline:hover { background: rgba(255,107,0,0.1); }
+
+/* --- Navbar --- */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(13,13,15,0.95); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.navbar::after {
+  content: ''; position: absolute; bottom: 0; left: 0; height: 2px; width: 100%;
+  background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
+  opacity: 0.6;
+}
+.navbar-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 64px;
+}
+.navbar-logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.navbar-logo-icon { font-size: 1.5rem; }
+.navbar-logo-text { font-family: var(--font-title); font-size: 1rem; color: var(--accent); }
+.navbar-nav { display: flex; align-items: center; gap: 4px; }
+.nav-link {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 0.9rem;
+  color: var(--text-muted); background: none; border: none; cursor: pointer;
+  transition: var(--transition); position: relative;
+}
+.nav-link:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+.nav-link.active { color: var(--accent); background: rgba(255,107,0,0.1); }
+.cart-badge {
+  position: absolute; top: 2px; right: 2px;
+  background: var(--accent); color: #fff; border-radius: 50%;
+  width: 18px; height: 18px; font-size: 0.7rem;
+  display: flex; align-items: center; justify-content: center; font-weight: 700;
+}
+.navbar-user { display: flex; align-items: center; gap: 10px; }
+.user-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px 4px 6px; font-size: 0.85rem;
+}
+.user-chip-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-red));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; font-family: var(--font-title); color: #fff;
+}
+
+/* --- Layout --- */
+.page-wrapper { padding-top: 64px; min-height: 100vh; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.accent-line { width: 40px; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-red)); border-radius: 2px; margin-bottom: 12px; }
+.section-title { font-size: 1.8rem; margin-bottom: 6px; }
+.section-subtitle { color: var(--text-muted); font-size: 1rem; font-family: var(--font-body); }
+
+/* --- Toast --- */
+.toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+.toast {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 18px;
+  min-width: 280px; box-shadow: var(--shadow);
+  animation: fadeInUp 0.3s ease;
+}
+.toast-success { border-color: rgba(46,204,113,0.4); }
+.toast-error   { border-color: rgba(230,57,70,0.4); }
+.toast-info    { border-color: var(--border-accent); }
+
+/* --- Modal Auth --- */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-box {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 40px; width: 100%; max-width: 460px;
+  box-shadow: var(--shadow), 0 0 60px rgba(255,107,0,0.1);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-tabs {
+  display: flex; margin-bottom: 28px;
+  background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 4px;
+}
+.modal-tab {
+  flex: 1; padding: 10px; text-align: center;
+  font-family: var(--font-title); font-size: 0.8rem; letter-spacing: 1px;
+  border: none; background: none; color: var(--text-muted); cursor: pointer;
+  border-radius: 6px; transition: var(--transition);
+}
+.modal-tab.active { background: var(--accent); color: #fff; }
+
+/* --- Formulários --- */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input {
+  width: 100%; background: var(--bg-secondary);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-primary); padding: 11px 14px;
+  font-family: var(--font-body); font-size: 0.93rem; transition: var(--transition);
+}
+.form-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,107,0,0.12); }
+.form-group small.err { color: var(--accent-red); font-size: 0.78rem; margin-top: 4px; display: block; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.form-grid .full-width { grid-column: 1 / -1; }
+@media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* --- Hero --- */
+.hero {
+  min-height: calc(100vh - 64px);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; padding: 60px 24px;
+}
+.hero-content { text-align: center; z-index: 1; max-width: 700px; }
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,107,0,0.1); border: 1px solid var(--border-accent);
+  color: var(--accent); padding: 6px 16px; border-radius: 20px;
+  font-size: 0.85rem; font-weight: 600; margin-bottom: 24px;
+}
+.hero-title { font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.1; margin-bottom: 18px; }
+.hero-title .highlight {
+  background: linear-gradient(135deg, var(--accent), #ff3d00);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero-subtitle { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 36px; line-height: 1.7; }
+.hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 44px; }
+.stats-bar { display: flex; gap: 44px; justify-content: center; flex-wrap: wrap; }
+.stat-item { text-align: center; }
+.stat-number { display: block; font-family: var(--font-title); font-size: 1.8rem; color: var(--accent); font-weight: 900; }
+.stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.pixel-deco { position: absolute; opacity: 0.06; font-size: 8rem; pointer-events: none; animation: floatDeco 6s ease-in-out infinite; }
+.pixel-deco-1 { top: 15%; left: 8%; animation-delay: 0s; }
+.pixel-deco-2 { top: 60%; right: 8%; animation-delay: 2s; }
+.pixel-deco-3 { bottom: 20%; left: 15%; animation-delay: 4s; }
+@keyframes floatDeco { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+
+/* --- Products --- */
+.products-page { padding: 40px 0 60px; }
+.category-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+.tab-btn {
+  padding: 8px 18px; border-radius: 20px;
+  font-family: var(--font-body); font-size: 0.88rem; font-weight: 600;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted);
+  cursor: pointer; transition: var(--transition);
+}
+.tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+.tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(255,107,0,0.3); }
+.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+
+/* --- Product Card --- */
+.product-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: var(--transition); display: flex; flex-direction: column; }
+.product-card:hover { border-color: var(--border-accent); transform: translateY(-3px); box-shadow: var(--shadow-accent); }
+.product-card-emoji { font-size: 3.5rem; text-align: center; padding: 24px; background: var(--bg-secondary); }
+.product-card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+.product-card-category { margin-bottom: 10px; }
+.category-badge { padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+.badge-burger { background: rgba(255,107,0,0.12); color: var(--accent); border: 1px solid var(--border-accent); }
+.badge-drink  { background: rgba(52,152,219,0.12); color: #3498db; border: 1px solid rgba(52,152,219,0.3); }
+.badge-veggie { background: rgba(46,204,113,0.12); color: var(--accent-green); border: 1px solid rgba(46,204,113,0.3); }
+.product-card-name { font-family: var(--font-title); font-size: 1rem; margin-bottom: 8px; }
+.product-card-desc { font-size: 0.87rem; color: var(--text-muted); line-height: 1.5; flex: 1; margin-bottom: 16px; }
+.product-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.product-price { font-family: var(--font-title); font-size: 1.1rem; color: var(--accent); font-weight: 700; }
+
+/* --- Cart --- */
+.cart-page { padding: 40px 0 60px; }
+.cart-layout { display: grid; grid-template-columns: 1fr 340px; gap: 28px; align-items: start; }
+@media (max-width: 900px) { .cart-layout { grid-template-columns: 1fr; } }
+.cart-item {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 20px; margin-bottom: 12px; transition: var(--transition);
+}
+.cart-item:hover { border-color: var(--border-accent); }
+.cart-item-emoji { font-size: 2.2rem; }
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-name { font-weight: 700; font-size: 0.95rem; }
+.cart-item-price { color: var(--accent); font-family: var(--font-title); font-size: 0.9rem; }
+.cart-item-qty { display: flex; align-items: center; gap: 10px; font-family: var(--font-title); }
+.qty-btn { background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-primary); width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font-size: 1.1rem; transition: var(--transition); }
+.qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+.cart-summary { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; position: sticky; top: 84px; }
+.cart-summary h3 { font-family: var(--font-title); font-size: 0.95rem; margin-bottom: 20px; }
+.summary-row { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; }
+.summary-row.total { font-family: var(--font-title); font-size: 1.1rem; color: var(--text-primary); font-weight: 700; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+.summary-row.total span:last-child { color: var(--accent); }
+.obs-input {
+  width: 100%; background: var(--bg-secondary);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-primary); padding: 10px 14px;
+  font-family: var(--font-body); font-size: 0.88rem; resize: none; margin-top: 12px;
+}
+.obs-input:focus { outline: none; border-color: var(--accent); }
+.cart-lock { text-align: center; padding: 80px 20px; }
+.cart-lock-icon { font-size: 4rem; margin-bottom: 16px; display: block; }
+
+/* --- Pedidos --- */
+.pedidos-page { padding: 40px 0 60px; }
+.pedido-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; transition: var(--transition); }
+.pedido-card:hover { border-color: var(--border-accent); }
+.pedido-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.pedido-id { font-family: var(--font-title); font-size: 0.85rem; color: var(--text-muted); }
+.pedido-total { font-family: var(--font-title); font-size: 1.1rem; color: var(--accent); font-weight: 700; }
+.status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.5px; }
+.status-AGUARDANDO { background: rgba(241,196,15,0.12); color: #f1c40f; border: 1px solid rgba(241,196,15,0.3); }
+.status-CONFIRMADO  { background: rgba(52,152,219,0.12); color: #3498db; border: 1px solid rgba(52,152,219,0.3); }
+.status-EM_PREPARO  { background: rgba(255,107,0,0.12); color: var(--accent); border: 1px solid var(--border-accent); }
+.status-PRONTO      { background: rgba(155,89,182,0.12); color: #9b59b6; border: 1px solid rgba(155,89,182,0.3); }
+.status-ENTREGUE    { background: rgba(46,204,113,0.12); color: var(--accent-green); border: 1px solid rgba(46,204,113,0.3); }
+.status-CANCELADO   { background: rgba(230,57,70,0.12); color: var(--accent-red); border: 1px solid rgba(230,57,70,0.3); }
+.detail-chip { background: rgba(255,107,0,0.08); border: 1px solid var(--border-accent); color: var(--text-muted); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; }
+
+/* --- Misc --- */
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-icon { font-size: 4rem; display: block; margin-bottom: 16px; }
+.spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-wrapper { display: flex; align-items: center; gap: 12px; color: var(--text-muted); padding: 40px 0; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in-up { animation: fadeInUp 0.45s ease both; }
+.fade-in-up:nth-child(1) { animation-delay: 0.05s; }
+.fade-in-up:nth-child(2) { animation-delay: 0.10s; }
+.fade-in-up:nth-child(3) { animation-delay: 0.15s; }
+.fade-in-up:nth-child(4) { animation-delay: 0.20s; }
+.fade-in-up:nth-child(5) { animation-delay: 0.25s; }
+.fade-in-up:nth-child(6) { animation-delay: 0.30s; }
+
+@media (max-width: 640px) {
+  .navbar-nav .nav-link span.nav-label { display: none; }
+  .hero-title { font-size: 2rem; }
+  .stats-bar { gap: 28px; }
+  .toast-container { bottom: 16px; right: 16px; left: 16px; }
+  .toast { min-width: unset; }
+}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+  <script type="text/babel">
+// =====================================================
+// STACK BURGERS — Frontend Cliente
+// Backend: Spring Boot em localhost:8080
+//
+// FLUXO COMPLETO:
+//  1. Visitante vê cardápio (produtos reais da API)
+//  2. Para pedir → precisa fazer login ou cadastro
+//  3. Logado → adiciona itens, finaliza → POST /api/pedidos
+//  4. Acompanha pedidos em "Meus Pedidos"
+// =====================================================
+
+// -------------------------------------------------
+// URL BASE DA API — altere aqui se mudar a porta
+// -------------------------------------------------
+const API = "http://localhost:8080/api";
+
+// Helper: lê resposta e lança erro legível se não for ok
+const safeJson = async (r, ctx) => {
+  const text = await r.text();
+  if (!r.ok) {
+    try {
+      const j = JSON.parse(text);
+      throw new Error(j.message || j.error || j.erro || ctx);
+    } catch (e) {
+      if (e.message !== text && e.message !== ctx) throw e;
+      throw new Error(text.replace(/<[^>]+>/g, "").trim().slice(0, 200) || ctx);
+    }
+  }
+  return text ? JSON.parse(text) : {};
+};
+
+// =====================================================
+// CAMADA DE API — todas as chamadas HTTP ficam aqui
+// Se precisar mudar uma rota, mude só neste objeto.
+// =====================================================
+const ApiService = {
+
+  // --- CLIENTES ---
+
+  // GET /api/clientes — busca lista para validar login
+  // NOTA: o backend não tem endpoint de /login.
+  // Por isso buscamos todos e filtramos pelo e-mail.
+  // Em produção, o ideal seria um POST /api/auth/login no Java.
+  loginCliente: async (email, senha) => {
+    const r = await fetch(`${API}/clientes`);
+    const lista = await safeJson(r, "Erro ao conectar ao servidor");
+    const user = lista.find(c => c.email === email);
+    if (!user) throw new Error("E-mail não encontrado. Crie uma conta!");
+    // O backend não retorna a senha no ClienteResponse (boa prática de segurança),
+    // então não conseguimos validar a senha aqui sem um endpoint dedicado.
+    return user;
+  },
+
+  // POST /api/clientes — cadastra novo cliente
+  createCliente: async (data) => {
+    const r = await fetch(`${API}/clientes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return safeJson(r, "Erro ao cadastrar cliente");
+  },
+
+  // --- PRODUTOS (Cardápio real do banco de dados) ---
+
+  // GET /api/hamburgeres/disponiveis — só os disponíveis
+  getHamburgeres: async () => {
+    const r = await fetch(`${API}/hamburgeres/disponiveis`);
+    return safeJson(r, "Erro ao buscar hambúrgueres");
+  },
+
+  // GET /api/bebidas/disponiveis — só as disponíveis
+  getBebidas: async () => {
+    const r = await fetch(`${API}/bebidas/disponiveis`);
+    return safeJson(r, "Erro ao buscar bebidas");
+  },
+
+  // --- PEDIDOS ---
+
+  // POST /api/pedidos — cria pedido real no banco
+  // Payload: { clienteId, itens: [{ produtoId, quantidade }], observacao }
+  criarPedido: async (payload) => {
+    const r = await fetch(`${API}/pedidos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return safeJson(r, "Erro ao criar pedido");
+  },
+
+  // GET /api/pedidos/cliente/{id} — pedidos do cliente logado
+  getPedidosCliente: async (clienteId) => {
+    const r = await fetch(`${API}/pedidos/cliente/${clienteId}`);
+    return safeJson(r, "Erro ao buscar pedidos");
+  },
+
+  // PATCH /api/pedidos/{id}/cancelar — cancela (só se AGUARDANDO)
+  cancelarPedido: async (pedidoId) => {
+    const r = await fetch(`${API}/pedidos/${pedidoId}/cancelar`, { method: "PATCH" });
+    return safeJson(r, "Erro ao cancelar pedido");
+  },
+};
+
+// =====================================================
+// STATUS — labels e cores dos status do backend
+// =====================================================
+const STATUS_LABEL = {
+  AGUARDANDO: "⏳ Aguardando",
+  CONFIRMADO: "✅ Confirmado",
+  EM_PREPARO: "🔥 Em Preparo",
+  PRONTO:     "🎉 Pronto",
+  ENTREGUE:   "🛵 Entregue",
+  CANCELADO:  "❌ Cancelado",
+};
+
+const getInitials = nome => nome ? nome.charAt(0).toUpperCase() : "?";
+
+// =====================================================
+// TOAST — notificações temporárias
+// =====================================================
+const Toast = ({ toasts }) => {
+  if (!toasts?.length) return null;
+  const icons = { success: "✅", error: "❌", info: "ℹ️" };
+  return (
+    <div className="toast-container">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast toast-${t.type || "info"}`}>
+          <span>{icons[t.type] || icons.info}</span>
+          <span>{t.message}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// =====================================================
+// NAVBAR — só links de cliente
+// =====================================================
+const Navbar = ({ currentPage, onNavigate, cartCount, user, onLogout, onOpenAuth }) => {
+  const navItems = [
+    { id: "home",         icon: "⚡", label: "Início"   },
+    { id: "products",     icon: "🍔", label: "Cardápio"  },
+    { id: "cart",         icon: "🛒", label: "Carrinho"  },
+    { id: "meus-pedidos", icon: "📋", label: "Pedidos"   },
+  ];
+
+  return (
+    <nav className="navbar">
+      <div className="navbar-inner">
+        <div className="navbar-logo" onClick={() => onNavigate("home")}>
+          <span className="navbar-logo-icon">🍔</span>
+          <span className="navbar-logo-text">STACK BURGERS</span>
+        </div>
+
+        <div className="navbar-nav">
+          {navItems.map(item => (
+            <button key={item.id}
+              className={`nav-link ${currentPage === item.id ? "active" : ""}`}
+              onClick={() => onNavigate(item.id)}
+            >
+              <span>{item.icon}</span>
+              <span className="nav-label">{item.label}</span>
+              {item.id === "cart" && cartCount > 0 && (
+                <span className="cart-badge">{cartCount}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Área do usuário */}
+        <div className="navbar-user">
+          {user ? (
+            <>
+              <div className="user-chip">
+                <div className="user-chip-avatar">{getInitials(user.nome)}</div>
+                <span>{user.nome.split(" ")[0]}</span>
+              </div>
+              <button className="btn btn-secondary"
+                style={{ fontSize: "0.8rem", padding: "7px 12px" }}
+                onClick={onLogout}>
+                Sair
+              </button>
+            </>
+          ) : (
+            <button className="btn btn-primary"
+              style={{ fontSize: "0.85rem", padding: "8px 16px" }}
+              onClick={onOpenAuth}>
+              🔐 Entrar
+            </button>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+// =====================================================
+// MODAL DE AUTH — Login e Cadastro de Cliente
+// =====================================================
+const AuthModal = ({ onClose, onLoginSuccess, onShowToast }) => {
+  const [tab, setTab] = React.useState("login");
+  const [loading, setLoading] = React.useState(false);
+
+  const [loginForm, setLoginForm] = React.useState({ email: "", senha: "" });
+  const [regForm, setRegForm] = React.useState({
+    nome: "", email: "", senha: "", cpf: "", telefone: "", endereco: "",
+  });
+  const [regErrors, setRegErrors] = React.useState({});
+
+  const handleLoginChange = e => setLoginForm(p => ({ ...p, [e.target.name]: e.target.value }));
+  const handleRegChange = e => {
+    const { name, value } = e.target;
+    setRegForm(p => ({ ...p, [name]: value }));
+    if (regErrors[name]) setRegErrors(p => ({ ...p, [name]: "" }));
+  };
+
+  const validateReg = () => {
+    const errs = {};
+    if (!regForm.nome.trim())  errs.nome  = "Nome obrigatório";
+    if (!regForm.email.trim()) errs.email = "E-mail obrigatório";
+    if (!regForm.senha || regForm.senha.length < 6) errs.senha = "Mínimo 6 caracteres";
+    setRegErrors(errs);
+    return !Object.keys(errs).length;
+    if (!regForm.endereco.trim()) errs.endereco = "Endereço obrigatório";
+  };
+
+  // Login: busca cliente pelo e-mail na API
+  const handleLogin = async () => {
+    if (!loginForm.email || !loginForm.senha) {
+      onShowToast("Preencha e-mail e senha", "error"); return;
+    }
+    setLoading(true);
+    try {
+      const user = await ApiService.loginCliente(loginForm.email, loginForm.senha);
+      onShowToast(`Bem-vindo(a), ${user.nome}! 🎮`, "success");
+      onLoginSuccess(user);
+      onClose();
+    } catch (err) {
+      onShowToast(err.message || "Erro ao fazer login", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cadastro: POST /api/clientes
+  const handleRegister = async () => {
+    if (!validateReg()) return;
+    setLoading(true);
+    try {
+      const novo = await ApiService.createCliente(regForm);
+      onShowToast(`Conta criada! Bem-vindo(a), ${novo.nome}! 🎉`, "success");
+      onLoginSuccess(novo);
+      onClose();
+    } catch (err) {
+      onShowToast(err.message || "Erro ao cadastrar", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box">
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ fontSize: "2.5rem", marginBottom: 8 }}>🍔</div>
+          <h2 style={{ fontFamily: "var(--font-title)", fontSize: "1.2rem", marginBottom: 4 }}>
+            STACK BURGERS
+          </h2>
+          <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
+            {tab === "login" ? "Faça login para fazer pedidos" : "Crie sua conta e peça agora"}
+          </p>
+        </div>
+
+        {/* Tabs */}
+        <div className="modal-tabs">
+          <button className={`modal-tab ${tab === "login" ? "active" : ""}`} onClick={() => setTab("login")}>
+            🔐 LOGIN
+          </button>
+          <button className={`modal-tab ${tab === "register" ? "active" : ""}`} onClick={() => setTab("register")}>
+            👾 CRIAR CONTA
+          </button>
+        </div>
+
+        {tab === "login" ? (
+          <>
+            <div className="form-group">
+              <label>E-mail</label>
+              <input type="email" name="email" placeholder="email@exemplo.com"
+                value={loginForm.email} onChange={handleLoginChange}
+                onKeyDown={e => e.key === "Enter" && handleLogin()} />
+            </div>
+            <div className="form-group">
+              <label>Senha</label>
+              <input type="password" name="senha" placeholder="••••••"
+                value={loginForm.senha} onChange={handleLoginChange}
+                onKeyDown={e => e.key === "Enter" && handleLogin()} />
+            </div>
+            <button className="btn btn-primary"
+              style={{ width: "100%", justifyContent: "center", padding: 14, marginTop: 8 }}
+              onClick={handleLogin} disabled={loading}>
+              {loading
+                ? <><span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }}></span> Entrando...</>
+                : "🔐 Entrar"}
+            </button>
+            <p style={{ textAlign: "center", marginTop: 16, color: "var(--text-muted)", fontSize: "0.85rem" }}>
+              Ainda não tem conta?{" "}
+              <span style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 600 }}
+                onClick={() => setTab("register")}>
+                Criar agora
+              </span>
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="form-grid">
+              <div className="form-group full-width">
+                <label>Nome Completo</label>
+                <input name="nome" placeholder="Ex: João Silva"
+                  value={regForm.nome} onChange={handleRegChange} />
+                {regErrors.nome && <small className="err">{regErrors.nome}</small>}
+              </div>
+              <div className="form-group">
+                <label>E-mail</label>
+                <input type="email" name="email" placeholder="email@exemplo.com"
+                  value={regForm.email} onChange={handleRegChange} />
+                {regErrors.email && <small className="err">{regErrors.email}</small>}
+              </div>
+              <div className="form-group">
+                <label>Senha</label>
+                <input type="password" name="senha" placeholder="Mín. 6 caracteres"
+                  value={regForm.senha} onChange={handleRegChange} />
+                {regErrors.senha && <small className="err">{regErrors.senha}</small>}
+              </div>
+              <div className="form-group">
+                <label>CPF <span style={{ color: "var(--text-dark)", textTransform: "none" }}>(opcional)</span></label>
+                <input name="cpf" placeholder="000.000.000-00"
+                  value={regForm.cpf} onChange={handleRegChange} />
+              </div>
+              <div className="form-group">
+                <label>Telefone <span style={{ color: "var(--text-dark)", textTransform: "none" }}>(opcional)</span></label>
+                <input name="telefone" placeholder="(11) 99999-9999"
+                  value={regForm.telefone} onChange={handleRegChange} />
+              </div>
+              <div className="form-group full-width">
+                <label>Endereço <span style={{ color: "var(--text-dark)", textTransform: "none" }}>(obrigatório)</span></label>
+                <input name="endereco" placeholder="Rua, número, bairro"
+                  value={regForm.endereco} onChange={handleRegChange} />
+              </div>
+            </div>
+            <button className="btn btn-primary"
+              style={{ width: "100%", justifyContent: "center", padding: 14, marginTop: 8 }}
+              onClick={handleRegister} disabled={loading}>
+              {loading
+                ? <><span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }}></span> Criando...</>
+                : "👾 Criar Minha Conta"}
+            </button>
+            <p style={{ textAlign: "center", marginTop: 16, color: "var(--text-muted)", fontSize: "0.85rem" }}>
+              Já tem conta?{" "}
+              <span style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 600 }}
+                onClick={() => setTab("login")}>
+                Fazer login
+              </span>
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// =====================================================
+// HOME PAGE
+// =====================================================
+const HomePage = ({ onNavigate, user, onOpenAuth }) => (
+  <div className="page-wrapper">
+    <section className="hero">
+      <span className="pixel-deco pixel-deco-1">🎮</span>
+      <span className="pixel-deco pixel-deco-2">⚡</span>
+      <span className="pixel-deco pixel-deco-3">🕹️</span>
+      <div className="hero-content">
+        <div className="hero-tag"><span>🎮</span><span>Nível MAX de Sabor</span></div>
+        <h1 className="hero-title">
+          Bem-vindo ao<br />
+          <span className="highlight">STACK BURGERS</span>
+        </h1>
+        <p className="hero-subtitle">
+          Hambúrgueres artesanais com o poder dos insanos.
+          Cada mordida é um <strong style={{ color: "var(--accent)" }}>critical hit</strong> de sabor.
+        </p>
+        <div className="hero-buttons">
+          <button className="btn btn-primary" style={{ fontSize: "1rem", padding: "14px 28px" }}
+            onClick={() => onNavigate("products")}>
+            🍔 Ver Cardápio
+          </button>
+          {user ? (
+            <button className="btn btn-secondary" style={{ fontSize: "1rem", padding: "14px 28px" }}
+              onClick={() => onNavigate("meus-pedidos")}>
+              📋 Meus Pedidos
+            </button>
+          ) : (
+            <button className="btn btn-secondary" style={{ fontSize: "1rem", padding: "14px 28px" }}
+              onClick={onOpenAuth}>
+              👾 Criar Conta / Entrar
+            </button>
+          )}
+        </div>
+        <div className="stats-bar">
+          <div className="stat-item"><span className="stat-number">12+</span><span className="stat-label">Burgers</span></div>
+          <div className="stat-item"><span className="stat-number">100%</span><span className="stat-label">Artesanal</span></div>
+          <div className="stat-item"><span className="stat-number">30min</span><span className="stat-label">Entrega</span></div>
+          <div className="stat-item"><span className="stat-number">⭐ 4.9</span><span className="stat-label">Avaliação</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+);
+
+// =====================================================
+// PRODUCT CARD
+// =====================================================
+const ProductCard = ({ product, onAddToCart, user, onOpenAuth }) => {
+  const [added, setAdded] = React.useState(false);
+
+  const handleAdd = () => {
+    if (!user) { onOpenAuth(); return; }
+    onAddToCart(product);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
+  };
+
+  return (
+    <div className="product-card fade-in-up">
+      <div className="product-card-emoji">{product.emoji}</div>
+      <div className="product-card-body">
+        <div className="product-card-category">
+          {product.category === "burger" ? (
+            <span className={`category-badge ${product.vegetariano ? "badge-veggie" : "badge-burger"}`}>
+              {product.vegetariano ? "🌱 Vegetariano" : "🍔 Hamburguer"}
+            </span>
+          ) : (
+            <span className="category-badge badge-drink">
+              {product.alcolica ? "🍺 Alcoólica" : "🥤 Bebida"}
+            </span>
+          )}
+        </div>
+        <h3 className="product-card-name">{product.name}</h3>
+        <p className="product-card-desc">{product.description}</p>
+        <div className="product-card-footer">
+          <span className="product-price">R$ {product.price.toFixed(2)}</span>
+          <button className={`btn ${added ? "btn-success" : "btn-primary"}`}
+            style={{ fontSize: "0.85rem", padding: "8px 14px" }} onClick={handleAdd}>
+            {added ? "✓ Adicionado!" : (user ? "+ Adicionar" : "🔐 Login p/ Pedir")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================================================
+// PRODUCTS PAGE — busca produtos reais da API
+// Se o backend estiver offline, usa produtos de exemplo
+// =====================================================
+const PRODUTOS_EXEMPLO = [
+  { id: 101, name: "Stack Classic",       description: "Blend Angus, cheddar, alface, tomate, maionese artesanal.", price: 28.90, emoji: "🍔", category: "burger", vegetariano: false },
+  { id: 102, name: "Stack Veggie",        description: "Blend de grão-de-bico, queijo vegano, rúcula, tomate seco.", price: 26.90, emoji: "🌱", category: "burger", vegetariano: true  },
+  { id: 103, name: "Stack Double Bacon",  description: "Duplo blend 180g, queijo gouda, bacon caramelizado, BBQ.", price: 38.90, emoji: "🥓", category: "burger", vegetariano: false },
+  { id: 104, name: "Stack Frango",        description: "Frango crocante, queijo prato, coleslaw, honey mustard.",   price: 24.90, emoji: "🍗", category: "burger", vegetariano: false },
+  { id: 105, name: "Coca-Cola 350ml",     description: "Refrigerante gelado. A pedida clássica.",                   price: 7.90,  emoji: "🥤", category: "drink",  alcolica: false    },
+  { id: 106, name: "Suco de Laranja",     description: "Suco natural espremido na hora 400ml.",                     price: 9.90,  emoji: "🍊", category: "drink",  alcolica: false    },
+  { id: 107, name: "Água Mineral",        description: "Água mineral sem gás 500ml.",                               price: 4.00,  emoji: "💧", category: "drink",  alcolica: false    },
+];
+
+const ProductsPage = ({ onAddToCart, user, onOpenAuth, onShowToast }) => {
+  const [activeTab, setActiveTab] = React.useState("all");
+  const [products, setProducts] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [fromApi, setFromApi] = React.useState(false);
+
+  // Carrega produtos reais do backend
+  React.useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        // Busca hambúrgueres e bebidas em paralelo
+        const [hamburgeres, bebidas] = await Promise.all([
+          ApiService.getHamburgeres(),
+          ApiService.getBebidas(),
+        ]);
+
+        // Mapeia resposta do Java (nome, preco, ingredientes...) para o formato do frontend
+        const mapped = [
+          ...hamburgeres.map(h => ({
+            id: h.id,
+            name: h.nome,
+            description: h.ingredientes || h.descricao || "",
+            price: h.preco,
+            emoji: h.vegetariano ? "🌱" : "🍔",
+            category: "burger",
+            vegetariano: h.vegetariano || false,
+          })),
+          ...bebidas.map(b => ({
+            id: b.id + 10000, // evita colisão de IDs com hambúrgueres
+            backendId: b.id,  // ID real para enviar no pedido
+            name: b.nome,
+            description: b.descricao || "",
+            price: b.preco,
+            emoji: b.alcolica ? "🍺" : "🥤",
+            category: "drink",
+            alcolica: b.alcolica || false,
+          })),
+        ];
+
+        if (mapped.length > 0) {
+          setProducts(mapped);
+          setFromApi(true);
+        } else {
+          setProducts(PRODUTOS_EXEMPLO);
+        }
+      } catch {
+        // Backend offline → usa exemplos
+        setProducts(PRODUTOS_EXEMPLO);
+        onShowToast("Backend offline. Exibindo cardápio de exemplo.", "info");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const filtered = products.filter(p =>
+    activeTab === "all" ? true :
+    activeTab === "burger" ? p.category === "burger" :
+    p.category === "drink"
+  );
+
+  return (
+    <div className="page-wrapper">
+      <div className="products-page">
+        <div className="container">
+          <div style={{ marginBottom: 32 }}>
+            <div className="accent-line"></div>
+            <h2 className="section-title">🍔 Cardápio</h2>
+            <p className="section-subtitle">
+              Escolha seu próximo{" "}
+              <strong style={{ color: "var(--accent)" }}>level up</strong> de sabor
+              {fromApi && <span style={{ color: "var(--accent-green)", fontSize: "0.8rem", marginLeft: 8 }}>● ao vivo</span>}
+              {!user && (
+                <>{" — "}<span style={{ color: "var(--accent)", cursor: "pointer" }} onClick={onOpenAuth}>
+                  faça login para pedir
+                </span></>
+              )}
+            </p>
+            <div className="category-tabs">
+              {[
+                { k: "all",    l: `🎮 Todos (${products.length})` },
+                { k: "burger", l: `🍔 Burgers (${products.filter(p => p.category === "burger").length})` },
+                { k: "drink",  l: `🥤 Bebidas (${products.filter(p => p.category === "drink").length})` },
+              ].map(t => (
+                <button key={t.k} className={`tab-btn ${activeTab === t.k ? "active" : ""}`}
+                  onClick={() => setActiveTab(t.k)}>{t.l}</button>
+              ))}
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="loader-wrapper">
+              <div className="spinner"></div>
+              <span>Carregando cardápio...</span>
+            </div>
+          ) : (
+            <div className="products-grid">
+              {filtered.map(p => (
+                <ProductCard key={p.id} product={p}
+                  onAddToCart={onAddToCart} user={user} onOpenAuth={onOpenAuth} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================================================
+// CART ITEM
+// =====================================================
+const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => (
+  <div className="cart-item fade-in-up">
+    <div className="cart-item-emoji">{item.emoji}</div>
+    <div className="cart-item-info">
+      <div className="cart-item-name">{item.name}</div>
+      <div className="cart-item-price">
+        R$ {(item.price * item.quantity).toFixed(2)}
+        {item.quantity > 1 && (
+          <span style={{ color: "var(--text-dark)", fontSize: "0.8rem", marginLeft: 6 }}>
+            ({item.quantity}x R$ {item.price.toFixed(2)})
+          </span>
+        )}
+      </div>
+    </div>
+    <div className="cart-item-qty">
+      <button className="qty-btn" onClick={() => onDecrease(item.id)}>−</button>
+      <span style={{ minWidth: 20, textAlign: "center" }}>{item.quantity}</span>
+      <button className="qty-btn" onClick={() => onIncrease(item.id)}>+</button>
+    </div>
+    <button className="btn btn-danger" onClick={() => onRemove(item.id)}>🗑</button>
+  </div>
+);
+
+// =====================================================
+// CART PAGE — envia pedido real para POST /api/pedidos
+// =====================================================
+const CartPage = ({ cartItems, onIncrease, onDecrease, onRemove, user, onOpenAuth, onCheckout, onShowToast }) => {
+  const [obs, setObs] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const subtotal  = cartItems.reduce((a, i) => a + i.price * i.quantity, 0);
+  const delivery  = cartItems.length > 0 ? 5.00 : 0;
+  const total     = subtotal + delivery;
+  const totalItens = cartItems.reduce((a, i) => a + i.quantity, 0);
+
+  // Envia o pedido para o backend
+  const handleFinalizar = async () => {
+    if (!user) { onOpenAuth(); return; }
+    if (!cartItems.length) return;
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        clienteId: user.id,
+        // Para cada item: usa backendId (bebidas) ou id direto (hambúrgueres)
+        itens: cartItems.map(i => ({
+          produtoId: i.backendId || i.id,
+          quantidade: i.quantity,
+        })),
+        observacao: obs,
+      };
+
+      const pedido = await ApiService.criarPedido(payload);
+      onCheckout({
+        pedidoId: pedido.id,
+        items: cartItems,
+        total,
+        hora: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      });
+    } catch (err) {
+      onShowToast(err.message || "Erro ao enviar pedido", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Se não logado, mostra tela de lock
+  if (!user) {
+    return (
+      <div className="page-wrapper">
+        <div className="cart-page"><div className="container">
+          <div className="cart-lock">
+            <span className="cart-lock-icon">🔐</span>
+            <h2 style={{ fontFamily: "var(--font-title)", marginBottom: 12 }}>Login Necessário</h2>
+            <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>
+              Você precisa estar logado para fazer pedidos no Stack Burgers.
+            </p>
+            <button className="btn btn-primary" style={{ fontSize: "1rem", padding: "14px 28px" }}
+              onClick={onOpenAuth}>
+              🎮 Entrar / Criar Conta
+            </button>
+          </div>
+        </div></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-wrapper">
+      <div className="cart-page"><div className="container">
+        <div style={{ marginBottom: 32 }}>
+          <div className="accent-line"></div>
+          <h2 className="section-title">🛒 Carrinho</h2>
+          <p className="section-subtitle">Revise seus itens antes de finalizar</p>
+        </div>
+
+        {cartItems.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-icon">🛒</span>
+            <h3 style={{ fontFamily: "var(--font-title)", marginBottom: 8 }}>Carrinho vazio</h3>
+            <p style={{ color: "var(--text-muted)" }}>Você ainda não adicionou nenhum item.</p>
+          </div>
+        ) : (
+          <div className="cart-layout">
+            {/* Lista de itens */}
+            <div>
+              <h3 style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "1px" }}>
+                Seus Itens
+              </h3>
+              {cartItems.map(item => (
+                <CartItem key={item.id} item={item}
+                  onIncrease={onIncrease} onDecrease={onDecrease} onRemove={onRemove} />
+              ))}
+            </div>
+
+            {/* Resumo */}
+            <div className="cart-summary">
+              <h3>🧾 Resumo do Pedido</h3>
+              <div className="summary-row"><span>Itens ({totalItens})</span><span>R$ {subtotal.toFixed(2)}</span></div>
+              <div className="summary-row"><span>🛵 Entrega</span><span>R$ {delivery.toFixed(2)}</span></div>
+              <div className="summary-row total"><span>Total</span><span>R$ {total.toFixed(2)}</span></div>
+
+              <div style={{ marginTop: 14 }}>
+                <label style={{ fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Observações
+                </label>
+                <textarea className="obs-input" rows={2}
+                  placeholder="Ex: Sem cebola, molho à parte..."
+                  value={obs} onChange={e => setObs(e.target.value)} />
+              </div>
+
+              <div style={{ marginTop: 12, padding: "10px 12px", background: "rgba(255,107,0,0.06)", borderRadius: 8, border: "1px solid var(--border-accent)", fontSize: "0.82rem", color: "var(--text-muted)" }}>
+                Pedindo como: <strong style={{ color: "var(--text-primary)" }}>{user.nome}</strong>
+              </div>
+
+              <button className="btn btn-success"
+                style={{ width: "100%", marginTop: 14, justifyContent: "center", padding: 14 }}
+                onClick={handleFinalizar} disabled={submitting}>
+                {submitting
+                  ? <><span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }}></span> Enviando...</>
+                  : "✅ Finalizar Pedido"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div></div>
+    </div>
+  );
+};
+
+// =====================================================
+// MEUS PEDIDOS — GET /api/pedidos/cliente/{id}
+// =====================================================
+const MeusPedidosPage = ({ user, onNavigate, onShowToast }) => {
+  const [pedidos, setPedidos] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!user) { setLoading(false); return; }
+    const load = async () => {
+      setLoading(true);
+      try {
+        const data = await ApiService.getPedidosCliente(user.id);
+        setPedidos(data.sort((a, b) => b.id - a.id));
+      } catch (err) {
+        onShowToast("Erro ao buscar pedidos", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [user]);
+
+  const handleCancelar = async (id) => {
+    try {
+      await ApiService.cancelarPedido(id);
+      onShowToast("Pedido cancelado.", "info");
+      setPedidos(p => p.map(x => x.id === id ? { ...x, status: "CANCELADO" } : x));
+    } catch (err) {
+      onShowToast(err.message, "error");
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="page-wrapper">
+        <div className="container" style={{ paddingTop: 80, textAlign: "center" }}>
+          <div style={{ fontSize: "3rem", marginBottom: 16 }}>🔐</div>
+          <p style={{ color: "var(--text-muted)" }}>Faça login para ver seus pedidos</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-wrapper">
+      <div className="pedidos-page"><div className="container">
+        <div style={{ marginBottom: 32 }}>
+          <div className="accent-line"></div>
+          <h2 className="section-title">📋 Meus Pedidos</h2>
+          <p className="section-subtitle">Acompanhe seus pedidos em tempo real</p>
+        </div>
+
+        {loading ? (
+          <div className="loader-wrapper"><div className="spinner"></div><span>Carregando pedidos...</span></div>
+        ) : pedidos.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-icon">📋</span>
+            <h3 style={{ fontFamily: "var(--font-title)", marginBottom: 8 }}>Nenhum pedido ainda</h3>
+            <p style={{ marginBottom: 24, color: "var(--text-muted)" }}>Que tal fazer seu primeiro pedido?</p>
+            <button className="btn btn-primary" onClick={() => onNavigate("products")}>🍔 Ver Cardápio</button>
+          </div>
+        ) : (
+          pedidos.map(p => (
+            <div key={p.id} className="pedido-card fade-in-up">
+              <div className="pedido-header">
+                <div>
+                  <div className="pedido-id">Pedido #{p.id}</div>
+                  <div style={{ marginTop: 6 }}>
+                    <span className={`status-badge status-${p.status}`}>
+                      {STATUS_LABEL[p.status] || p.status}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div className="pedido-total">R$ {p.valorTotal?.toFixed(2) || "—"}</div>
+                  {/* Só pode cancelar se ainda estiver AGUARDANDO */}
+                  {p.status === "AGUARDANDO" && (
+                    <button className="btn btn-danger"
+                      style={{ fontSize: "0.78rem", padding: "5px 10px", marginTop: 6 }}
+                      onClick={() => handleCancelar(p.id)}>
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Itens do pedido */}
+              {p.itens?.length > 0 && (
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: 4, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {p.itens.map((item, i) => (
+                    <span key={i} className="detail-chip">
+                      {item.quantidade}x {item.produto?.nome || `Produto #${item.produtoId}`}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {p.observacao && (
+                <div style={{ marginTop: 10, fontSize: "0.82rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                  📝 {p.observacao}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div></div>
+    </div>
+  );
+};
+
+// =====================================================
+// CONFIRMAÇÃO — tela após finalizar pedido
+// =====================================================
+const ConfirmacaoPage = ({ order, onNavigate }) => {
+  const [min, setMin] = React.useState(30);
+  React.useEffect(() => {
+    const t = setInterval(() => setMin(m => m > 1 ? m - 1 : 0), 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  if (!order) return null;
+
+  return (
+    <div className="page-wrapper">
+      <div style={{ padding: "60px 20px", maxWidth: 680, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ fontSize: "5rem", marginBottom: 16, animation: "fadeInUp 0.5s ease" }}>🎉</div>
+          <div className="accent-line" style={{ margin: "0 auto 16px" }}></div>
+          <h1 style={{ fontFamily: "var(--font-title)", fontSize: "1.8rem", background: "linear-gradient(135deg,var(--accent),#ff3d00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginBottom: 10 }}>
+            PEDIDO ENVIADO!
+          </h1>
+          <p style={{ color: "var(--text-muted)" }}>
+            Pedido #{order.pedidoId} registrado. Aguarde a confirmação da lanchonete. 🍔
+          </p>
+        </div>
+
+        {/* Timer */}
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius)", padding: 24, marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <span style={{ fontSize: "2.5rem" }}>🛵</span>
+            <div>
+              <div style={{ fontFamily: "var(--font-title)", fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: 4 }}>TEMPO ESTIMADO</div>
+              <div style={{ fontFamily: "var(--font-title)", fontSize: "2rem", color: "var(--accent)", fontWeight: 900 }}>{min} min</div>
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontFamily: "var(--font-title)", fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: 4 }}>PEDIDO ÀS</div>
+            <div style={{ fontFamily: "var(--font-title)", fontSize: "1.4rem" }}>{order.hora}</div>
+          </div>
+        </div>
+
+        {/* Itens */}
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 24, marginBottom: 20 }}>
+          <h3 style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "1px" }}>🧾 Resumo</h3>
+          {order.items.map((item, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < order.items.length - 1 ? "1px solid var(--border)" : "none" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: "1.6rem" }}>{item.emoji}</span>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>{item.name}</div>
+                  <div style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>{item.quantity}x R$ {item.price.toFixed(2)}</div>
+                </div>
+              </div>
+              <span style={{ fontFamily: "var(--font-title)", color: "var(--accent)", fontWeight: 700 }}>
+                R$ {(item.price * item.quantity).toFixed(2)}
+              </span>
+            </div>
+          ))}
+          <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 14, marginTop: 4 }}>
+            <span style={{ fontFamily: "var(--font-title)", fontWeight: 700 }}>TOTAL</span>
+            <span style={{ fontFamily: "var(--font-title)", color: "var(--accent)", fontWeight: 900, fontSize: "1.2rem" }}>
+              R$ {order.total.toFixed(2)}
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <button className="btn btn-primary" style={{ flex: 1, justifyContent: "center", padding: 14 }}
+            onClick={() => onNavigate("meus-pedidos")}>
+            📋 Acompanhar Pedido
+          </button>
+          <button className="btn btn-secondary" style={{ flex: 1, justifyContent: "center", padding: 14 }}
+            onClick={() => onNavigate("home")}>
+            🏠 Voltar ao Início
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================================================
+// APP ROOT — estado global e roteamento
+// =====================================================
+const App = () => {
+  const [currentPage, setCurrentPage] = React.useState("home");
+  const [cartItems,   setCartItems]   = React.useState([]);
+  const [toasts,      setToasts]      = React.useState([]);
+  const [user,        setUser]        = React.useState(null);
+  const [showAuth,    setShowAuth]    = React.useState(false);
+  const [lastOrder,   setLastOrder]   = React.useState(null);
+
+  const showToast = (message, type = "info") => {
+    const id = Date.now();
+    setToasts(p => [...p, { id, message, type }]);
+    setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 3500);
+  };
+
+  const handleAddToCart = product => {
+    setCartItems(prev => {
+      const ex = prev.find(i => i.id === product.id);
+      if (ex) return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+      return [...prev, { ...product, quantity: 1 }];
+    });
+    showToast(`${product.name} adicionado! 🍔`, "success");
+  };
+
+  const handleIncrease = id => setCartItems(p => p.map(i => i.id === id ? { ...i, quantity: i.quantity + 1 } : i));
+  const handleDecrease = id => setCartItems(p => {
+    const item = p.find(i => i.id === id);
+    if (item.quantity <= 1) return p.filter(i => i.id !== id);
+    return p.map(i => i.id === id ? { ...i, quantity: i.quantity - 1 } : i);
+  });
+  const handleRemove = id => { setCartItems(p => p.filter(i => i.id !== id)); showToast("Item removido.", "info"); };
+
+  const handleCheckout = orderData => {
+    setLastOrder(orderData);
+    setCartItems([]);
+    setCurrentPage("confirmacao");
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setCurrentPage("home");
+    showToast("Você saiu da conta.", "info");
+  };
+
+  const cartCount = cartItems.reduce((a, i) => a + i.quantity, 0);
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case "home":
+        return <HomePage onNavigate={setCurrentPage} user={user} onOpenAuth={() => setShowAuth(true)} />;
+      case "products":
+        return <ProductsPage onAddToCart={handleAddToCart} user={user} onOpenAuth={() => setShowAuth(true)} onShowToast={showToast} />;
+      case "cart":
+        return <CartPage cartItems={cartItems} onIncrease={handleIncrease} onDecrease={handleDecrease} onRemove={handleRemove} user={user} onOpenAuth={() => setShowAuth(true)} onCheckout={handleCheckout} onShowToast={showToast} />;
+      case "meus-pedidos":
+        return <MeusPedidosPage user={user} onNavigate={setCurrentPage} onShowToast={showToast} />;
+      case "confirmacao":
+        return <ConfirmacaoPage order={lastOrder} onNavigate={setCurrentPage} />;
+      default:
+        return <HomePage onNavigate={setCurrentPage} user={user} onOpenAuth={() => setShowAuth(true)} />;
+    }
+  };
+
+  return (
+    <>
+      <Navbar
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
+        cartCount={cartCount}
+        user={user}
+        onLogout={handleLogout}
+        onOpenAuth={() => setShowAuth(true)}
+      />
+
+      {renderPage()}
+
+      {showAuth && (
+        <AuthModal
+          onClose={() => setShowAuth(false)}
+          onLoginSuccess={setUser}
+          onShowToast={showToast}
+        />
+      )}
+
+      <Toast toasts={toasts} />
+    </>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
